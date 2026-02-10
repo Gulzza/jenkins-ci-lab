@@ -1,5 +1,5 @@
 pipeline {
-    agent none   // IMPORTANT: controller does NOT run jobs
+    agent none   // Controller does NOT execute anything
 
     options {
         timestamps()
@@ -8,30 +8,32 @@ pipeline {
 
     stages {
 
-        stage('Checkout') {
-            agent any
-            steps {
-                git branch: 'main',
-                    url: 'https://github.com/YOUR_ORG/jenkins-ci-lab.git'
-            }
-        }
-
         stage('Build on mac-agent') {
-            agent { label 'mac-agent' }
+            agent { label 'mac' }
             steps {
+                checkout scm
                 sh '''
-                  echo "Build stage"
-                  ./app/app.sh
+                    echo "=============================="
+                    echo "BUILD STAGE"
+                    echo "Running on host: $(hostname)"
+                    echo "Workspace: $(pwd)"
+                    echo "=============================="
+                    ./app/app.sh
                 '''
             }
         }
 
-        stage('Test on node-mac1') {
-            agent { label 'node-mac1' }
+        stage('Test on agent2') {
+            agent { label 'mac' }
             steps {
+                checkout scm
                 sh '''
-                  echo "Test stage"
-                  ./tests/test.sh
+                    echo "=============================="
+                    echo "TEST STAGE"
+                    echo "Running on host: $(hostname)"
+                    echo "Workspace: $(pwd)"
+                    echo "=============================="
+                    ./tests/test.sh
                 '''
             }
         }
@@ -39,10 +41,10 @@ pipeline {
 
     post {
         success {
-            echo "Pipeline SUCCESS"
+            echo "✅ PIPELINE SUCCESS"
         }
         failure {
-            echo "Pipeline FAILED"
+            echo "❌ PIPELINE FAILED"
         }
         always {
             cleanWs()
